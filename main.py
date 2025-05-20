@@ -5,10 +5,21 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import time
 import json
-from urllib.request import urlretrieve
-
+import os
+import urllib.request
 
 def get_all_showroom_paints(profile_url,first_paint_id,maxiumum_scroll_attempts):
+    """_This is a function that opens firefox reads a trading paints profile and saves the hyperlinks,
+    the ID and the title of each paint. To do this is pages down to load all the content until it finds the first upload specified by config file _
+
+    Args:
+        profile_url (_type_): _String - trading paints profile url eg https://www.tradingpaints.com/profile/858183/Jonan-Turner_
+        first_paint_id (_type_): _The first paint ID it is found after /view/ in the url eg 933999 from https://www.tradingpaints.com/showroom/view/933999/REVSPORT-International-X-ARCA-Ford-Mustang  _
+        maxiumum_scroll_attempts (_type_): _Maximum ammount of scrolls before browser times out set in config file set higher if you have a lot of paints on your profile_
+
+    Returns:
+        _type_: _description_
+    """
     browser = webdriver.Firefox()
     browser.get(profile_url)
     
@@ -43,17 +54,41 @@ def get_all_showroom_paints(profile_url,first_paint_id,maxiumum_scroll_attempts)
             parent_link = item.find_element(By.XPATH, ".//a[contains(@class, 'aspect-ratio--tp')]")
             href = parent_link.get_attribute('href')
             item_id = item.get_attribute('id')
-            paints.append({"ID": item_id, "URL": href,'Title': (href.split('/')[-1]).replace('-',' ')})
+            print("ID:",item_id,"Title:",(href.split('/')[-1]).replace('-',' '))
+            paints.append({"id": item_id, "url": href,'title': (href.split('/')[-1]).replace('-',' '),"assest": None})
     browser.quit()
     return paints
     
 
+def save_images(url,title):
+    try:
+        os.mkdir(title)
+    except FileExistsError:
+        pass
+    full_path = os.path.join(title,'preview.jpg')
+    urllib.urlretrieve(url, full_path)
+
+def find_preview_image_url(paint):
+      browser = webdriver.Firefox()
+      url = paint['url']
+      browser.get(url)
+      WebDriverWait(browser, 10)
 
 with open("config.json") as f:
     config = json.load(f)
     url = config['profile_url']
     first = config['first_paint_id']
     max_scroll = config['maxiumum_scroll_attempts']
+
+
+def save_paints_to_json(paints):
+    paints_json = json.dumps(paints)
+    with open('paints.json', 'w') as f:
+        json.dump(paints_json, f)
+
 paints = get_all_showroom_paints(url,first,max_scroll)
-def save_paint_image():
-    pass
+
+
+
+
+
