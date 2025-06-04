@@ -20,7 +20,7 @@ def get_all_showroom_paints(profile_url,first_paint_id,maxiumum_scroll_attempts)
     Returns:
         _type_: _description_
     """
-    browser = webdriver.Firefox()
+    browser = webdriver.Chrome()
     browser.get(profile_url)
     
     # Wait for initial content to load
@@ -48,14 +48,14 @@ def get_all_showroom_paints(profile_url,first_paint_id,maxiumum_scroll_attempts)
         browser.quit()
     else:
         # Now extract all showroom items (including the target)
-        showroom_items = browser.find_elements(By.XPATH, "//div[starts-with(@id, 'showroom_')]")
+        showroom_items = browser.find_elements(By.XPATH, "//div[starts-with(@id, 'showroom_') and substring(@id, string-length(@id), 1) >= '0' and substring(@id, string-length(@id), 1) <= '9']")
         paints = []
         for item in showroom_items:
             parent_link = item.find_element(By.XPATH, ".//a[contains(@class, 'aspect-ratio--tp')]")
             href = parent_link.get_attribute('href')
             item_id = item.get_attribute('id')
             print("ID:",item_id,"Title:",(href.split('/')[-1]).replace('-',' '))
-            paints.append({"id": item_id, "url": href,'title': (href.split('/')[-1]).replace('-',' '),"assest": None})
+            paints.append({"id": item_id, "url": href,'title': (href.split('/')[-1]).replace('-',' '),"assset": None})
     browser.quit()
     return paints
     
@@ -87,8 +87,5 @@ def save_paints_to_json(paints):
         json.dump(paints_json, f)
 
 paints = get_all_showroom_paints(url,first,max_scroll)
-
-
-
-
+save_paints_to_json(paints)
 
